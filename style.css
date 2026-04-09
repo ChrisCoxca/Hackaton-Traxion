@@ -437,9 +437,15 @@ html, body {
 #map-area {
   flex: 1; position: relative; overflow: hidden;
   background: var(--bg-base);
+  min-width: 0; /* Fix flex child overflow */
 }
 
-#map-container { width: 100%; height: 100%; }
+#map-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
 
 /* Scanline effect */
 #map-area::before {
@@ -452,10 +458,16 @@ html, body {
 
 /* ─── API Notice ─── */
 #api-notice {
-  position: absolute; inset: 0; z-index: 20;
+  position: absolute; inset: 0; z-index: 15;
   background: var(--bg-base);
   display: flex; align-items: center; justify-content: center;
-  /* Shown by default, hidden by JS when map loads */
+  pointer-events: none; /* No bloquea clics al mapa cuando es visible solo como info */
+  transition: opacity 0.4s ease;
+}
+#api-notice.hidden {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
 }
 .api-notice-inner {
   text-align: center; max-width: 420px; padding: 0 20px;

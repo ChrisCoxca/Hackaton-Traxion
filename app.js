@@ -53,8 +53,12 @@ const STATE = {
     return;
   }
 
+  /* Exponer callback GLOBALMENTE antes de inyectar el script
+     Google Maps llama window.starsMapReady directamente */
+  window.starsMapReady = onMapsReady;
+
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&language=es&region=MX&callback=STARS.onMapsReady`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&language=es&region=MX&callback=starsMapReady`;
   script.async = true; script.defer = true;
   script.onerror = () => {
     console.error('[S.T.A.R.S.] Error cargando Google Maps SDK.');
@@ -72,6 +76,11 @@ function onMapsReady() {
   STATE.mapsLoaded = true;
   console.log('[S.T.A.R.S.] Google Maps SDK cargado correctamente.');
 
+  /* Ocultar API notice PRIMERO antes de inicializar el mapa */
+  const notice = document.getElementById('api-notice');
+  notice.style.opacity = '0';
+  setTimeout(() => notice.classList.add('hidden'), 400);
+
   /* Inicializar Map */
   STATE.map = new google.maps.Map(document.getElementById('map-container'), {
     zoom: 12,
@@ -84,6 +93,13 @@ function onMapsReady() {
     streetViewControl: false,
     fullscreenControl: false,
   });
+
+  /* Forzar resize tras ocultar el notice para que Google Maps
+     recalcule sus dimensiones correctamente */
+  setTimeout(() => {
+    google.maps.event.trigger(STATE.map, 'resize');
+    STATE.map.setCenter(STARS_CONFIG.MAP_CENTER_DEFAULT);
+  }, 450);
 
   /* Inicializar servicios */
   STATE.directionsService = new google.maps.DirectionsService();
@@ -119,9 +135,6 @@ function onMapsReady() {
     document.getElementById('dest-status').textContent = '✓';
     document.getElementById('dest-status').style.color = '#10b981';
   });
-
-  /* Ocultar API notice */
-  document.getElementById('api-notice').classList.add('hidden');
 
   /* Saludo del agente */
   sendSequence([
